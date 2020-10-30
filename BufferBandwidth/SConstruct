@@ -1,0 +1,36 @@
+import os
+import commands
+
+if commands.getoutput("uname") == "Darwin":
+	OSX=1
+	OSFLAG='-DOSX'
+else:
+	OSX=0
+	OSFLAG='-D__LINUX__'
+
+OPENCL_DIR=os.environ['OPENCL_DIR']
+AMD_SDK_PATH=os.environ['AMDAPPSDKROOT']
+os=ARGUMENTS.get('os','OSX')
+
+dev=ARGUMENTS.get('dev','GPU')
+DEVFLAG='-D'+dev
+
+OSX_OCL_PATH='/System/Library/Frameworks/OpenCL.framework/Versions/A/Headers'
+sources=Split("""
+BufferBandwidth.cpp
+Host.cpp
+Log.cpp
+Shared.cpp
+Timer.cpp
+""");
+
+env = Environment( CXX = 'g++', CXXFLAGS = ['--verbose','-Wall','-g',OSFLAG,DEVFLAG])
+if OSX==1:
+	env['FRAMEWORKS'] = ['OpenCL']
+	env['CPPPATH']=[OSX_OCL_PATH]
+else:
+	env['LIBS']=['OpenCL']
+	env['LIBPATH']=[AMD_SDK_PATH+'/lib/x86_64']
+	env['CPPPATH']=[AMD_SDK_PATH+'/include']
+env.Program('BufferBandwidth',sources)
+

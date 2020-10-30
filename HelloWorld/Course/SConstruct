@@ -1,0 +1,8 @@
+from OclBuilder import build
+
+appname='helloworld'
+
+# Any additional sources
+sources=[appname+'.cc']
+
+build(appname,sources)

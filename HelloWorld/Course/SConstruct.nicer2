@@ -1,0 +1,43 @@
+#verbose: scons SHOWBUILD=1 
+import os
+#from optparse import OptionParser
+
+def getOpt(optname,desc,default):
+
+    global opts
+    opts.Add(optname,desc,default)
+    optionl = filter (lambda x: x.key==optname,opts.options)
+    if optionl:
+        option=optionl[0]
+        if opts.args.has_key(optname) and opts.args[optname]!=option.default:
+            return opts.args[option.key]
+        else: 
+            return option.default
+    else:
+        print "No such option: "+optname
+
+opts=Variables()   
+dev=getOpt('dev','Device','GPU')
+
+print "Device selected: "+dev
+env = Environment( CC = 'g++', CXXFLAGS = ['-Wall','-g'])
+
+#Include Path
+cwd=os.environ['PWD']
+incpath = ['.',cwd+'/OpenCLIntegration']
+env.Append(CPPPATH = incpath)
+ocl_libpath=cwd+'/OpenCLIntegration'
+env.Append(LIBS=['OpenCL','OclWrapper'])
+env['LIBPATH']=ocl_libpath
+#AddOption('--GPU',)
+#Is it possible to add some sort of option to select CPU or GPU when compiling?
+env.SConscript('OpenCLIntegration/SConstruct')
+if dev=='GPU':
+  env.Program('hello_GPU', ['helloworld_nicer.cc'])
+else:
+  env.Program('hello_CPU', ['helloworld_nicer.cc'])
+  
+#env.Library('usercode', ['src/TUserCode.cc',
+#		     'src/TNestedSample.cc', 
+#		     'src/TSimplePhysics.cc','src/TSimplePhysics_GPU.cc','src/TPlotter.cc'])
+

@@ -1,0 +1,2 @@
+ g++ -Wall -DNTH=16 -DNGROUPS=16 -DSELECT=0 test_loops.cc -o test_loops
+ ./test_loops

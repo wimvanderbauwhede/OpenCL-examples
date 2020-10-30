@@ -1,0 +1,1 @@
+gfortran-mp-4.6 -cpp matacc.f -DKERNEL=1 -DWIDTH=1024 -DREF=1 -DVERBOSE -DNRUNS=1

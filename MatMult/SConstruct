@@ -1,0 +1,71 @@
+import os
+import commands
+
+appname='matmult'
+
+
+help = """
+Options:
+plat=AMD|NVIDIA [NVIDIA]
+dev=CPU|GPU [GPU] device
+kernel=<number> [1]   
+w=<number> [1024]   matrix width
+ref=0|1|2 [1]     reference 2=ref only
+v=0|1 [1]         verbose
+mode=0|1|2   COPY|COPY+ALLOC|USE 
+"""
+if commands.getoutput("uname") == "Darwin":
+    OSX=1
+    OSFLAG='-DOSX'
+else:
+	OSX=0
+	OSFLAG='-D__LINUX__'
+
+OPENCL_DIR=os.environ['OPENCL_DIR']
+# print OPENCL_DIR
+plat=ARGUMENTS.get('plat','NVIDIA')
+if plat=='AMD':      
+    print 'AMD platform'
+    AMD_SDK_PATH=os.environ['AMDAPPSDKROOT']
+else:    
+    NVIDIA_SDK_PATH=os.environ['NVSDKCUDA_ROOT']
+
+dev=ARGUMENTS.get('dev','GPU')
+kernel=ARGUMENTS.get('kernel','1')
+width=ARGUMENTS.get('w','1024')
+ref=ARGUMENTS.get('ref','1')
+refflag='-DREF'
+verbose=ARGUMENTS.get('v','1')
+vflag='-DVERBOSE'
+if verbose=='0':
+    vflag=''
+mode=ARGUMENTS.get('mode','1')
+memreadflag='-DMRMODE='+mode
+devinfo=ARGUMENTS.get('info','0')
+devinfoflag=''
+if devinfo=='1':
+    devinfoflag='-DDEVINFO'
+DEVFLAGS=['-D'+dev,'-DKERNEL='+kernel,'-DWIDTH='+width,'-DREF='+ref,vflag, memreadflag,devinfoflag]
+if commands.getoutput("uname") == "Darwin":
+    DEVFLAGS+=['-DOSX']
+    
+
+
+sources=['../DeviceInfo.cc',appname+'.cc']
+
+Help(help)
+env = Environment( CXX = 'g++', CXXFLAGS = ['-Wall','-g',DEVFLAGS])
+if OSX==1:
+    env['FRAMEWORKS'] = ['OpenCL']
+    env['CPPPATH']=[OPENCL_DIR]
+else:    
+    env['LIBS']=['OpenCL']
+    if plat=='AMD':
+    	env['CPPPATH']=[OPENCL_DIR,AMD_SDK_PATH+'/include']
+        env['LIBPATH']=[AMD_SDK_PATH+'/lib/x86_64']
+    else:
+        env['CPPPATH']=[OPENCL_DIR,NVIDIA_SDK_PATH+'/OpenCL/common/inc']
+
+prog=env.Program(appname+kernel+'_'+mode+'_'+dev.lower()+'_'+plat.lower(),sources)
+env.Depends(prog,[appname+'.cl'])
+
